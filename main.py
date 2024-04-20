@@ -11,7 +11,7 @@ from funcs import *
 from typing import List
 from slugify import slugify
 
-DATABASE_URL = "postgresql://hakaton:hakaton@localhost:5433/hakaton"
+DATABASE_URL = "postgresql://hakaton:hakaton@hackaton_19042024_db_1:5432/hakaton"
 
 engine = create_engine(DATABASE_URL)
 # Base.metadata.drop_all(bind=engine)
