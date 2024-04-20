@@ -25,6 +25,8 @@ services:
       - services-network
     depends_on:
       - db
+    volumes:
+      - .:/app
 
 
 

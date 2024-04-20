@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException
+from urllib import response
+from fastapi import FastAPI, Depends, HTTPException, Header
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
 from pydantic_model import *
 from pydantic_model import Team as TeamResponse, TeamUser as TeamUserResponse, Question as QuestionResponse, Answer as AnswerResponse, Rating as RatingResponse, RatingType as RatingTypeResponse, TeamBase
 
+import uvicorn
 
 from models import Base, Team, TeamUser, Question, Answer, Rating, RatingType
 from funcs import *
@@ -35,14 +37,68 @@ def read_teams(db: Session = Depends(get_db)):
     teams = db.query(Team).all()
     return [TeamResponse.from_orm(team) for team in teams]
 
-@app.get("/teams/{slug}", response_model=TeamResponse)
+
+
+@app.get("/teams/{slug}", response_model=TeamCompleteData)
 def read_team(slug: str, db: Session = Depends(get_db)):
     team = db.query(Team).filter(Team.slug == slug).first()
     if team is None:
         raise HTTPException(status_code=404, detail="Team not found")
-    return TeamResponse.from_orm(team)
+    return TeamCompleteData.from_orm(team)
 
-@app.post("/teams/", response_model=TeamResponse)
+
+
+@app.post("/teams/{slug}")
+def update_team(slug: str, team_update: TeamData, db: Session = Depends(get_db), token: str = Header(...)):
+
+
+    # Поиск команды по слагу
+    team = db.query(Team).filter(Team.slug == slug).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+
+    # Проверка токена аутентификации
+    if not check_valid_token(login=team.login, encode_password=team.password, token=token):
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    # Обновление данных команды
+    if team_update.email is not None:
+        team.email = team_update.email
+    if team_update.team_name is not None:
+        team.name = team_update.team_name
+    if team_update.login is not None:
+        team.login = team_update.login
+    if team_update.image is not None:
+        user_image_path = save_image_to_disk(team_update.image, team.name)
+        team.icon_path = user_image_path  # Здесь должна быть логика сохранения изображения
+
+    # Обновление данных участников команды
+    for team_user_update in team_update.team_users:
+        team_user = db.query(TeamUser).get(team_user_update.id)
+        if not team_user:
+            raise HTTPException(status_code=404, detail="Team user not found")
+        if team_user_update.surname is not None:
+            team_user.surname = team_user_update.surname
+        if team_user_update.first_name is not None:
+            team_user.first_name = team_user_update.first_name
+        if team_user_update.patronymic is not None:
+            team_user.patronymic = team_user_update.patronymic
+        if team_user_update.description is not None:
+            team_user.description = team_user_update.description
+        if team_user_update.image is not None:
+            user_image_path = save_image_to_disk(team_user_update.image, team.name)
+            team_user.img_path = user_image_path  # Здесь должна быть логика сохранения изображения
+
+    # Сохранение изменений в базе данных
+    db.commit()
+
+    return {"detail": "Team updated successfully"}
+
+
+
+
+@app.post("/teams/", response_model=CreateCommandResponse)
 def create_team(team_data: TeamData, db: Session = Depends(get_db)):
     # Сохраняем основное изображение команды
     team_image_path = save_image_to_disk(team_data.image, team_data.team_name)
@@ -53,7 +109,7 @@ def create_team(team_data: TeamData, db: Session = Depends(get_db)):
         slug=slugify(team_data.team_name),
         email=team_data.email,
         login=team_data.login,
-        password=team_data.password,
+        password=encode_to_sha256(team_data.password),
         icon_path=team_image_path
     )
 
@@ -79,50 +135,78 @@ def create_team(team_data: TeamData, db: Session = Depends(get_db)):
 
     db.commit()
 
-    return TeamResponse.from_orm(team)
+    TeamRegData = CreateCommandResponse
 
-@app.post("/teams/{slug}/users/", response_model=TeamUserResponse)
-def create_team_user(slug: str, team_user: TeamUserBase, db: Session = Depends(get_db)):
+    TeamRegData.token = gen_login_token(team_data.login, team_data.password)
+
+    return TeamRegData
+
+@app.post("/teams/{slug}/users/", response_model=TeamUserResponseble)
+def create_team_user(slug: str, team_user: TeamUserAdd, db: Session = Depends(get_db)):
     team = db.query(Team).filter(Team.slug == slug).first()
     if team is None:
         raise HTTPException(status_code=404, detail="Team not found")
-    team_user.team_id = team.id
-    db.add(team_user)
-    db.commit()
-    db.refresh(team_user)
-    return TeamUserResponse.from_orm(team_user)
 
-@app.post("/teams/{slug}/questions/", response_model=QuestionResponse)
-def create_question(slug: str, question: QuestionBase, db: Session = Depends(get_db)):
-    team = db.query(Team).filter(Team.slug == slug).first()
+
+    user_image_path = save_image_to_disk(team_user.image, team.name)
+
+    new_user = TeamUser(
+        surname = team_user.surname,
+        first_name = team_user.first_name,
+        patronymic = team_user.patronymic,
+        img_path = user_image_path,
+        description = team_user.description,
+        team_id = team.id
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return TeamUserResponseble.from_orm(new_user)
+
+@app.post("/login/", response_model=LoginResponse)
+def create_answer(login: LoginRequest, db: Session = Depends(get_db)):
+    team = db.query(Team).filter(Team.login == login.login).first()
     if team is None:
         raise HTTPException(status_code=404, detail="Team not found")
-    question.team_slug = slug
-    db.add(question)
-    db.commit()
-    db.refresh(question)
-    return QuestionResponse.from_orm(question)
+    
+    current_token = gen_login_token(login=login.login, password=login.password)
+    
+    if check_valid_token(login=login.login, encode_password=team.password, token=current_token):
+        response = LoginResponse
+        response.token = current_token
+        return response
+    else:
+        raise HTTPException(status_code=400, detail="Incorrect password")
 
-@app.post("/teams/{slug}/questions/{question_id}/answers/", response_model=AnswerResponse)
-def create_answer(slug: str, question_id: int, answer: AnswerBase, db: Session = Depends(get_db)):
-    question = db.query(Question).filter(Question.id == question_id, Question.team_slug == slug).first()
-    if question is None:
-        raise HTTPException(status_code=404, detail="Question not found")
-    answer.question_id = question.id
-    db.add(answer)
-    db.commit()
-    db.refresh(answer)
-    return AnswerResponse.from_orm(answer)
+
+if __name__ == "__main__":
+    print("sdfsdfsdfsdf")
+    uvicorn.run(app, host="0.0.0.0", port=8080)
 
 
 
-@app.post("/login/", response_model=AnswerResponse)
-def create_answer(slug: str, question_id: int, answer: AnswerBase, db: Session = Depends(get_db)):
-    question = db.query(Question).filter(Question.id == question_id, Question.team_slug == slug).first()
-    if question is None:
-        raise HTTPException(status_code=404, detail="Question not found")
-    answer.question_id = question.id
-    db.add(answer)
-    db.commit()
-    db.refresh(answer)
-    return AnswerResponse.from_orm(answer)
+
+
+# @app.post("/teams/{slug}/questions/", response_model=QuestionResponse)
+# def create_question(slug: str, question: QuestionBase, db: Session = Depends(get_db)):
+#     team = db.query(Team).filter(Team.slug == slug).first()
+#     if team is None:
+#         raise HTTPException(status_code=404, detail="Team not found")
+#     question.team_slug = slug
+#     db.add(question)
+#     db.commit()
+#     db.refresh(question)
+#     return QuestionResponse.from_orm(question)
+
+# @app.post("/teams/{slug}/questions/{question_id}/answers/", response_model=AnswerResponse)
+# def create_answer(slug: str, question_id: int, answer: AnswerBase, db: Session = Depends(get_db)):
+#     question = db.query(Question).filter(Question.id == question_id, Question.team_slug == slug).first()
+#     if question is None:
+#         raise HTTPException(status_code=404, detail="Question not found")
+#     answer.question_id = question.id
+#     db.add(answer)
+#     db.commit()
+#     db.refresh(answer)
+#     return AnswerResponse.from_orm(answer)
+

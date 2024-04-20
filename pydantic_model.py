@@ -77,15 +77,35 @@ class Question(QuestionBase):
     id: int
     answers: List[AnswerBase] = []
 
-class Team(TeamBase):
+
+
+class Team(BaseModel):
+    slug: str
+    icon_path: str
+
+    class Config:
+        from_attributes=True
+        orm_mode = True
+
+
+
+class TeamCompleteData(BaseModel):
+    name: str
+    slug: str
+    email: str
+    icon_path: str
+
+
     team_users: List[TeamUser] = []
     questions: List[Question] = []
     ratings: List[RatingBase] = []
 
-
     class Config:
-        # Используем класс Exclude, чтобы удалить поля login и password из сериализации
-        exclude = {"login", "password"}
+        from_attributes=True
+        orm_mode = True
+
+
+
 
 class Answer(AnswerBase):
     id: int
@@ -101,16 +121,56 @@ class RatingType(RatingTypeBase):
 
 
 class TeamUser(BaseModel):
+    id: int = None
+    surname: str =  None
+    first_name: str =  None
+    patronymic: str =  None
+    image: str =  None
+    description: str =  None
+    class Config:
+        from_attributes=True
+
+class TeamData(BaseModel):
+    team_name: Optional[str] =  None
+    email: Optional[str] =  None
+    login: Optional[str] =  None
+    password: Optional[str] =  None
+    image: Optional[str] =  None
+    team_users: Optional[List[TeamUser]] =  None
+
+
+
+
+class LoginRequest(BaseModel):
+    login: str
+    password: str
+
+class LoginResponse(BaseModel):
+    token: str
+
+
+
+class CreateCommandResponse(BaseModel):
+    token: str
+
+
+
+class TeamUserAdd(BaseModel):
     surname: str
     first_name: str
     patronymic: str
     image: str
     description: str
 
-class TeamData(BaseModel):
-    team_name: str
-    email: str
-    login: str
-    password: str
-    image: str
-    team_users: List[TeamUser]
+
+
+
+class TeamUserResponseble(BaseModel):
+    id: int = None
+    surname: str =  None
+    first_name: str =  None
+    patronymic: str =  None
+    img_path: str =  None
+    description: str =  None
+    class Config:
+        from_attributes=True
