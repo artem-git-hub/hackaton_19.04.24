@@ -23,6 +23,12 @@ class TeamUserBase(BaseModel):
     description: str
     team_id: int
 
+
+    job: Optional[str]
+    mark_participation: Optional[int]
+    difficulties: Optional[str]
+    portfolio_link: Optional[str]
+
     class Config:
         from_attributes=True
         orm_mode = True
@@ -127,6 +133,10 @@ class TeamUser(BaseModel):
     patronymic: str =  None
     image: str =  None
     description: str =  None
+    job: Optional[str] =  None
+    mark_participation: Optional[int] =  None
+    difficulties: Optional[str] =  None
+    portfolio_link: Optional[str] =  None
     class Config:
         from_attributes=True
 
@@ -162,6 +172,11 @@ class TeamUserAdd(BaseModel):
     image: str
     description: str
 
+    job: Optional[str] =  None
+    mark_participation: Optional[int] =  None
+    difficulties: Optional[str] =  None
+    portfolio_link: Optional[str] =  None
+
 
 
 
@@ -172,5 +187,9 @@ class TeamUserResponseble(BaseModel):
     patronymic: str =  None
     img_path: str =  None
     description: str =  None
+    job: Optional[str] =  None
+    mark_participation: Optional[int] =  None
+    difficulties: Optional[str] =  None
+    portfolio_link: Optional[str] =  None
     class Config:
         from_attributes=True

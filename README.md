@@ -25,7 +25,20 @@
   "slug": "слаг_команды",
   "email": "email@команды",
   "icon_path": "путь_к_иконке_команды",
-  "team_users": [],
+  "team_users": [
+    {
+      "surname": "Фамилия участника",
+      "first_name": "Имя участника",
+      "patronymic": "Отчество участника",
+      "image": "base64 строка с изображением",
+      "description": "Описание участника",
+      "job": "Профессия - ui/ux дизайнер",
+      "mark_participation": 3,
+      "difficulties": "Трудности возникшие в проекте",
+      "portfolio_link": "https://portfolio.link"
+    },
+    ...
+  ],
   "questions": [],
   "ratings": []
 }
@@ -53,7 +66,11 @@
       "first_name": "Имя участника",
       "patronymic": "Отчество участника",
       "image": "base64 строка с изображением",
-      "description": "Описание участника"
+      "description": "Описание участника",
+      "job": "Профессия - ui/ux дизайнер",
+      "mark_participation": 3,
+      "difficulties": "Трудности возникшие в проекте",
+      "portfolio_link": "https://portfolio.link"
     },
     ...
   ]
@@ -86,7 +103,11 @@
       "first_name": "Новое имя участника",
       "patronymic": "Новое отчество участника",
       "image": "новая_base64_строка_с_изображением",
-      "description": "Новое описание участника"
+      "description": "Новое описание участника",
+      "job": "Новая профессия дизайнера",
+      "mark_participation": 4,
+      "difficulties": "Новые трудности",
+      "portfolio_link": "https://portfolio.link/new"
     },
     ...
   ]
@@ -105,7 +126,11 @@
   "first_name": "Имя участника",
   "patronymic": "Отчество участника",
   "image": "base64 строка с изображением",
-  "description": "Описание участника"
+  "description": "Описание участника",
+  "job": "Профессия - ui/ux дизайнер",
+  "mark_participation": 3,
+  "difficulties": "Трудности возникшие в проекте",
+  "portfolio_link": "https://portfolio.link"
 }
 ```
 

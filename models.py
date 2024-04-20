@@ -10,7 +10,7 @@ class Team(Base):
     name = Column(String)
     slug = Column(String, unique=True)
     email = Column(String)
-    login = Column(String)
+    login = Column(String, unique=True)
     password = Column(String)
     icon_path = Column(String)
     team_users = relationship('TeamUser', backref='team')
@@ -25,6 +25,12 @@ class TeamUser(Base):
     patronymic = Column(String)
     img_path = Column(String)
     description = Column(String)
+
+    job = Column(String)
+    mark_participation = Column(Integer)
+    difficulties = Column(String)
+    portfolio_link = Column(String)
+    
     team_id = Column(Integer, ForeignKey('teams.id'))
 
 class Question(Base):

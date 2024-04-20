@@ -16,7 +16,7 @@ from slugify import slugify
 DATABASE_URL = "postgresql://hakaton:hakaton@hackaton_19042024_db_1:5432/hakaton"
 
 engine = create_engine(DATABASE_URL)
-# Base.metadata.drop_all(bind=engine)
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -90,6 +90,17 @@ def update_team(slug: str, team_update: TeamData, db: Session = Depends(get_db),
             user_image_path = save_image_to_disk(team_user_update.image, team.name)
             team_user.img_path = user_image_path  # Здесь должна быть логика сохранения изображения
 
+
+        
+        if team_user_update.job is not None:
+            team_user.job = team_user_update.job
+        if team_user_update.mark_participation is not None:
+            team_user.mark_participation = team_user_update.mark_participation
+        if team_user_update.difficulties is not None:
+            team_user.difficulties = team_user_update.difficulties
+        if team_user_update.portfolio_link is not None:
+            team_user.portfolio_link = team_user_update.portfolio_link
+
     # Сохранение изменений в базе данных
     db.commit()
 
@@ -128,7 +139,12 @@ def create_team(team_data: TeamData, db: Session = Depends(get_db)):
             patronymic=team_user_data.patronymic,
             img_path=user_image_path,
             description=team_user_data.description,
-            team_id=team.id
+            team_id=team.id,
+
+            job=team_user_data.job,
+            mark_participation=team_user_data.mark_participation,
+            difficulties=team_user_data.difficulties,
+            portfolio_link=team_user_data.portfolio_link
         )
 
         db.add(team_user)
@@ -156,7 +172,12 @@ def create_team_user(slug: str, team_user: TeamUserAdd, db: Session = Depends(ge
         patronymic = team_user.patronymic,
         img_path = user_image_path,
         description = team_user.description,
-        team_id = team.id
+        team_id = team.id,
+
+        job=team_user.job,
+        mark_participation=team_user.mark_participation,
+        difficulties=team_user.difficulties,
+        portfolio_link=team_user.portfolio_link
     )
 
     db.add(new_user)
