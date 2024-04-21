@@ -1,9 +1,7 @@
-
-from fastapi import UploadFile, HTTPException
-
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 from datetime import datetime
+
 
 class TeamBase(BaseModel):
     name: str
@@ -14,6 +12,7 @@ class TeamBase(BaseModel):
     class Config:
         from_attributes=True
         orm_mode = True
+
 
 class TeamUserBase(BaseModel):
     surname: str
@@ -33,6 +32,7 @@ class TeamUserBase(BaseModel):
         from_attributes=True
         orm_mode = True
 
+
 class QuestionBase(BaseModel):
     fio: str
     email: str
@@ -46,6 +46,7 @@ class QuestionBase(BaseModel):
         from_attributes=True
         orm_mode = True
 
+
 class AnswerBase(BaseModel):
     question_id: int
     text: str
@@ -57,6 +58,7 @@ class AnswerBase(BaseModel):
         from_attributes=True
         orm_mode = True
 
+
 class RatingBase(BaseModel):
     team_id: int
     rating_type_id: int
@@ -65,6 +67,7 @@ class RatingBase(BaseModel):
     class Config:
         from_attributes=True
         orm_mode = True
+
 
 class RatingTypeBase(BaseModel):
     name: str
