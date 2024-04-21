@@ -3,6 +3,7 @@ version: '3.6'
 services:
   db:
     image: postgres:16.2
+    container_name: ${POSTGRES_CONTAINER}
     volumes:
       - ./database:/var/lib/postgresql/data
     env_file: 

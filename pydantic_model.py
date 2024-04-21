@@ -2,7 +2,7 @@
 from fastapi import UploadFile, HTTPException
 
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Dict, List, Optional
 from datetime import datetime
 
 class TeamBase(BaseModel):
@@ -89,9 +89,23 @@ class Team(BaseModel):
     slug: str
     icon_path: str
 
+
     class Config:
         from_attributes=True
         orm_mode = True
+
+
+
+
+
+class TeamsResponseble(BaseModel):
+    teams: List[Team] = []
+    ranked_teams: List[str] = []
+
+    class Config:
+        from_attributes=True
+        orm_mode = True
+
 
 
 
@@ -104,7 +118,6 @@ class TeamCompleteData(BaseModel):
 
     team_users: List[TeamUser] = []
     questions: List[Question] = []
-    ratings: List[RatingBase] = []
 
     class Config:
         from_attributes=True
@@ -157,6 +170,7 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     token: str
+    slug: str
 
 
 
@@ -193,3 +207,26 @@ class TeamUserResponseble(BaseModel):
     portfolio_link: Optional[str] =  None
     class Config:
         from_attributes=True
+
+
+
+
+class RatingTypeModel(BaseModel):
+    slug: str
+    name: str
+
+# Pydantic модель для рейтингов команды
+class TeamRatings(BaseModel):
+    command_slug: str
+    ratings: Dict[str, int]
+    class Config:
+        from_attributes=True
+
+
+
+class RatingTypeResponse(BaseModel):
+    slug: str
+    name: str
+
+
+

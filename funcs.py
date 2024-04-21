@@ -65,3 +65,10 @@ def check_valid_token(login: str, encode_password: str, token: str):
     encode_login = base64.b64encode(login.encode()).decode()
     
     return f"{encode_login}|||{encode_password}" == token
+
+
+def get_login_from_roken(token: str):
+    encode_login, encode_password = token.split("|||")
+    decode_login = base64.b64decode(encode_login.encode()).decode()
+
+    return decode_login

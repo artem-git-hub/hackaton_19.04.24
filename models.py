@@ -30,7 +30,7 @@ class TeamUser(Base):
     mark_participation = Column(Integer)
     difficulties = Column(String)
     portfolio_link = Column(String)
-    
+
     team_id = Column(Integer, ForeignKey('teams.id'))
 
 class Question(Base):
@@ -54,16 +54,18 @@ class Answer(Base):
     updated_at = Column(DateTime)
     deleted_at = Column(DateTime)
 
-class Rating(Base):
-    __tablename__ = 'ratings'
-    id = Column(Integer, primary_key=True)
-    team_id = Column(Integer, ForeignKey('teams.id'))
-    rating_type_id = Column(Integer, ForeignKey('rating_types.id'))
-    mark = Column(Integer)
-
 class RatingType(Base):
     __tablename__ = 'rating_types'
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    rating_id = Column(Integer, ForeignKey('ratings.id'))
+    mark = Column(Integer)
     slug = Column(String)
-    ord = Column(Integer)
+
+class Rating(Base):
+    __tablename__ = 'ratings'
+    id = Column(Integer, primary_key=True)
+    command_slug_from = Column(String)
+    command_slug_to = Column(String, ForeignKey('teams.slug'))
+    rating_types = relationship('RatingType', backref='rating')
+
+
