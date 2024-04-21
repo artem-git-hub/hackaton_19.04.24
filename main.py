@@ -37,9 +37,12 @@ def get_db():
         db.close()
 
 @app.get("/teams/", response_model=TeamsResponseble)
-def read_teams(db: Session = Depends(get_db), token: str = Header(...)):
+def read_teams(db: Session = Depends(get_db), token: str = Header(None)):
 
-    current_login = get_login_from_roken(token=token)
+    if token is not None:
+        current_login = get_login_from_roken(token=token)
+    else:
+        current_login = None
     current_team = db.query(Team).filter(Team.login == current_login).first()
 
     teams = db.query(Team).all()
@@ -49,7 +52,10 @@ def read_teams(db: Session = Depends(get_db), token: str = Header(...)):
     response = TeamsResponseble(teams=[], ranked_teams=[])
 
     for team in teams:
-        rating = db.query(Rating).filter(Rating.command_slug_from == current_team.slug, Rating.command_slug_to == team.slug).first()
+        if current_team is not None:
+            rating = db.query(Rating).filter(Rating.command_slug_from == current_team.slug, Rating.command_slug_to == team.slug).first()
+        else:
+            rating = None
         if rating is not None:
             response.ranked_teams.append(team.slug)
         response.teams.append(TeamResponse.from_orm(team))
