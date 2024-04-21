@@ -47,8 +47,6 @@ def read_teams(db: Session = Depends(get_db), token: str = Header(None)):
 
     teams = db.query(Team).all()
 
-    # all_teams = [TeamResponse.from_orm(team) for team in teams]
-
     response = TeamsResponseble(teams=[], ranked_teams=[])
 
     for team in teams:
@@ -286,7 +284,7 @@ def add_ratings(slug: str, rating: TeamRatings, db: Session = Depends(get_db), t
 
 
 @app.get("/ratings/", response_model=None)
-def get_rating_types(db: Session = Depends(get_db), token: str = Header(...)):
+def get_rating_types(db: Session = Depends(get_db)):
 
     list_teams = []
 
