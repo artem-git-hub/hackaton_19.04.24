@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from misc.encode_sha256 import encode_to_sha256
 from misc.save_image import save_image_to_disk
 from misc.token_actions import check_valid_token, gen_login_token, get_login_from_token
+import psycopg2
+import sqlalchemy
 from sqlalchemy.orm import Session
 from pydantic_models.models import *
 from pydantic_models.models import Team as TeamResponse
@@ -45,7 +47,7 @@ def read_team(slug: str, db: Session = Depends(get_db)):
     team = db.query(Team).filter(Team.slug == slug).first()
 
     if team is None:
-        raise HTTPException(status_code=404, detail="Team not found")
+        raise HTTPException(status_code=404, detail="Команда не найдена")
     return TeamCompleteData.from_orm(team)
 
 
@@ -56,12 +58,12 @@ def update_team(slug: str, team_update: TeamData, db: Session = Depends(get_db),
     # Поиск команды по слагу
     team = db.query(Team).filter(Team.slug == slug).first()
     if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
+        raise HTTPException(status_code=404, detail="Команда не найдена")
 
 
     # Проверка токена аутентификации
     if not check_valid_token(login=team.login, encode_password=team.password, token=token):
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Не правильный токен")
 
     # Обновление данных команды
     if team_update.email is not None:
@@ -78,7 +80,7 @@ def update_team(slug: str, team_update: TeamData, db: Session = Depends(get_db),
     for team_user_update in team_update.team_users:
         team_user = db.query(TeamUser).get(team_user_update.id)
         if not team_user:
-            raise HTTPException(status_code=404, detail="Team user not found")
+            raise HTTPException(status_code=404, detail="Пользователь не найден")
         if team_user_update.surname is not None:
             team_user.surname = team_user_update.surname
         if team_user_update.first_name is not None:
@@ -105,7 +107,7 @@ def update_team(slug: str, team_update: TeamData, db: Session = Depends(get_db),
     # Сохранение изменений в базе данных
     db.commit()
 
-    return {"detail": "Team updated successfully"}
+    return {"detail": "Команда успешно обновлена"}
 
 
 @router.post("/teams/", response_model=LoginResponse)
@@ -124,9 +126,14 @@ def create_team(team_data: TeamData, db: Session = Depends(get_db)):
     )
 
     # Сохраняем команду в базе данных
-    db.add(team)
-    db.commit()
-    db.refresh(team)
+    try:
+        db.add(team)
+        db.commit()
+        db.refresh(team)
+    except sqlalchemy.exc.IntegrityError as e:
+        raise HTTPException(status_code=400, detail="Логин (или имя) уже существует")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Ошибка в запросе")
 
     # Сохраняем изображения для участников команды
     for team_user_data in team_data.team_users:
