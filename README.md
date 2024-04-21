@@ -94,7 +94,6 @@
   "team_name": "Новое название команды",
   "email": "new_email@example.com",
   "login": "новый_логин",
-  "password": "новый_пароль",
   "image": "новая_base64_строка_с_изображением",
   "team_users": [
     {
